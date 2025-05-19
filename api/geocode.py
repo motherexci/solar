@@ -1,16 +1,35 @@
-import pgeocode
+from http.server import BaseHTTPRequestHandler
+import json
+from urllib.parse import urlparse, parse_qs
+from pgeocode import Nominatim
 
-def geocode_zip(zip_code):
-    """Return (lat, lon) for a 5-digit ZIP code."""
-    nomi = pgeocode.Nominatim('us')
-    pc = nomi.query_postal_code(zip_code)
-    if pc is not None and pc.latitude is not None and pc.longitude is not None:
-        return float(pc.latitude), float(pc.longitude)
-    else:
-        raise ValueError("Please enter a valid 5-digit ZIP code.")
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        # 1) parse the “zip” query parameter
+        params = parse_qs(urlparse(self.path).query)
+        zip_code = params.get("zip", [None])[0]
+        if not zip_code:
+            self.send_response(400)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": "Missing 'zip' parameter"}).encode())
+            return
 
-if __name__ == "__main__":
-    zip_code = input("Enter your 5-digit ZIP code: ")
-    lat, lon = geocode_zip(zip_code)
-    print(f"Latitude:  {lat:.5f}")
-    print(f"Longitude: {lon:.5f}")
+        # 2) look up latitude & longitude
+        nomi = Nominatim("us")
+        location = nomi.query_postal_code(zip_code)
+        try:
+            lat = float(location.latitude)
+            lon = float(location.longitude)
+        except Exception:
+            self.send_response(404)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": f"ZIP '{zip_code}' not found"}).encode())
+            return
+
+        # 3) return JSON
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps({"latitude": lat, "longitude": lon}).encode())
