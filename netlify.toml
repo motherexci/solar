@@ -1,0 +1,12 @@
+[build]
+  # when you deploy, Netlify will publish the files in public/
+  publish   = "public"
+  # your Functions live here
+  functions = "netlify/functions"
+
+[dev]
+  # when you run `netlify dev`, serve public/ as the site root
+  publish   = "public"
+  functions = "netlify/functions"
+  # you can hard-code your dev port here (optional)
+  port      = 8910
