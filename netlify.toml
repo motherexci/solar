@@ -12,6 +12,5 @@
   port      = 8910
 
 [site]
-  site_id = "<36fbd555-5a5d-4f92-9674-829bac0b4895>"
+  site_id = "36fbd555-5a5d-4f92-9674-829bac0b4895"
 
-  
